@@ -3,6 +3,7 @@ import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { useParams } from 'react-router';
 import { styled } from '@mui/system';
+import { Link } from 'react-router-dom';
 import { Typography, CircularProgress, List, ListItem, ListItemText, Avatar } from '@mui/material';
 import { Character, Episode, CharacterDetailsProps } from '../interfaces/types';
 
@@ -37,6 +38,9 @@ const CharacterAvatar = styled(Avatar)({
   width: '50px',
   height: '50px',
   marginRight: '1rem',
+});
+const CharacterDivider = styled('div')({
+  border: '1px solid black',
 });
 
 export const GET_CHARACTER_DETAILS = gql`
@@ -93,21 +97,26 @@ const CharacterDetails: React.FC<CharacterDetailsProps> = () => {
       <Typography variant="body1">Episodes:</Typography>
       <List>
         {character.episode.map((episode: Episode) => (
-          <ListItem key={episode.id}>
-            <EpisodeName variant="body1">
-              {episode.name}
-            </EpisodeName>
-            <CharacterList>
-              {episode.characters.map((character: Character) => (
-                <ListItem key={character.id}>
-                  <CharacterAvatar src={character.image} alt={character.name} />
-                  <ListItemText primary={`Name: ${character.name}`} />
-                </ListItem>
-              ))}
-            </CharacterList>
-          </ListItem>
+          <>
+            <ListItem key={episode.id} component={Link} to={`/episode/${episode.id}`}>
+              <EpisodeName variant="body1">
+                {`${episode.name} Episode # ${episode.id}`}
+              </EpisodeName>
+              <CharacterList>
+                {episode.characters.map((character: Character) => (
+                  <ListItem key={character.id}>
+                    <CharacterAvatar src={character.image} alt={character.name} />
+                    <ListItemText primary={`Name: ${character.name}, id  ${character.id}`} />
+                  </ListItem>
+                ))}
+              </CharacterList>
+
+            </ListItem>
+            <CharacterDivider />
+          </>
         ))}
       </List>
+
     </div>
   );
 };

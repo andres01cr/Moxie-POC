@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { Link } from 'react-router-dom';
@@ -33,8 +33,11 @@ const useStyles = makeStyles(() => ({
 }));
 
 const GET_CHARACTERS = gql`
-  query GetCharacters {
-    characters {
+  query GetCharacters($page: Int!) {
+    characters(page: $page) {
+      info {
+        next
+      }
       results {
         id
         name
@@ -47,9 +50,49 @@ const GET_CHARACTERS = gql`
 
 const CharacterList: React.FC = () => {
   const classes = useStyles();
-  const { loading, error, data } = useQuery(GET_CHARACTERS);
+  const { loading, error, data, fetchMore } = useQuery(GET_CHARACTERS, {
+    variables: { page: 1 },
+  });
 
-  if (loading) {
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop ===
+        document.documentElement.offsetHeight
+      ) {
+        loadMoreCharacters();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const loadMoreCharacters = () => {
+    if (!loading && data?.characters.info.next) {
+      fetchMore({
+        variables: {
+          page: data.characters.info.next,
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+          return {
+            characters: {
+              info: fetchMoreResult.characters.info,
+              results: [
+                ...prev.characters.results,
+                ...fetchMoreResult.characters.results,
+              ],
+            },
+          };
+        },
+      });
+    }
+  };
+
+  if (loading && !data) {
     return (
       <Box className={classes.loadingContainer}>
         <CircularProgress />
@@ -68,9 +111,18 @@ const CharacterList: React.FC = () => {
   return (
     <List>
       {data?.characters.results.map((character: Character) => (
-        <ListItem key={character.id} component={Link} to={`/character/${character.id}`} className={classes.characterListItem}>
+        <ListItem
+          key={character.id}
+          component={Link}
+          to={`/character/${character.id}`}
+          className={classes.characterListItem}
+        >
           <ListItemAvatar>
-            <Avatar className={classes.characterAvatar} alt={character.name} src={character.image} />
+            <Avatar
+              className={classes.characterAvatar}
+              alt={character.name}
+              src={character.image}
+            />
           </ListItemAvatar>
           <ListItemText
             primary={character.name}
@@ -78,6 +130,11 @@ const CharacterList: React.FC = () => {
           />
         </ListItem>
       ))}
+      {loading && (
+        <Box className={classes.loadingContainer}>
+          <CircularProgress />
+        </Box>
+      )}
     </List>
   );
 };
