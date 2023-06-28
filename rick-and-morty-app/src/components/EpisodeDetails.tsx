@@ -1,4 +1,4 @@
-import React from 'react';
+import { FC } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { useParams } from "react-router";
@@ -33,7 +33,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const GET_EPISODE_DETAILS = gql`
+export const GET_EPISODE_DETAILS = gql`
   query GetEpisodeDetails($id: ID!) {
     episode(id: $id) {
       name
@@ -46,9 +46,9 @@ const GET_EPISODE_DETAILS = gql`
   }
 `;
 
-const EpisodeDetails: React.FC<EpisodeDetailsProps> = () => {
+const EpisodeDetails: FC<EpisodeDetailsProps> = ({ episodeId }) => {
   const classes = useStyles();
-  const { id } = useParams();
+  const { id } = useParams() || episodeId;
   const { loading, error, data } = useQuery(GET_EPISODE_DETAILS, {
     variables: { id },
   });

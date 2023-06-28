@@ -1,8 +1,8 @@
 import React from 'react';
-import { render, waitFor, act } from '@testing-library/react';
+import { render, waitFor, act, screen} from '@testing-library/react';
 import { MockedProvider } from '@apollo/react-testing';
 import { MemoryRouter, Route } from 'react-router-dom';
-import EpisodeDetails, { GET_EPISODE_DETAILS } from './EpisodeDetails';
+import EpisodeDetails, { GET_EPISODE_DETAILS } from '../../src/components/EpisodeDetails';
 
 const mockEpisode = {
   id: '1',
@@ -35,14 +35,28 @@ const mocks = [
   },
 ];
 
+
+// jest.mock(
+//   '../../src/components/EpisodeDetails',
+//   () => (props: Record<string, any>) => {
+//       return (
+//           <div>
+//               <div>Action Dialog</div>
+//               <button onClick={props.onClose}>close dialog</button>
+//               <button onClick={props.onSave}>save</button>
+//           </div>
+//       );
+//   }
+// );
+
 describe('EpisodeDetails', () => {
   it('renders loading state initially', async () => {
+ 
     const { getByText } = render(
       <MockedProvider mocks={mocks} addTypename={false}>
         <EpisodeDetails />
       </MockedProvider>
     );
-
     expect(getByText('Loading...')).toBeInTheDocument();
 
     await waitFor(() => {});

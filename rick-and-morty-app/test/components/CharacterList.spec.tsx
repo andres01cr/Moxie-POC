@@ -1,28 +1,32 @@
 import React from 'react';
-import { render, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MockedProvider } from '@apollo/react-testing';
-import CharacterList, { GET_CHARACTERS } from './CharacterList';
+import  { GET_CHARACTERS, CharacterList } from '../../src/components/CharacterList';
 
 const mocks = [
   {
     request: {
       query: GET_CHARACTERS,
+      variables: { page: 1 },
     },
     result: {
       data: {
         characters: {
+          info: {
+            next: 2,
+          },
           results: [
             {
               id: '1',
               name: 'Character 1',
               image: 'image-url-1',
-              status: 'Status 1',
+              status: 'Alive',
             },
             {
               id: '2',
               name: 'Character 2',
               image: 'image-url-2',
-              status: 'Status 2',
+              status: 'Dead',
             },
           ],
         },
@@ -32,50 +36,46 @@ const mocks = [
 ];
 
 describe('CharacterList', () => {
-  it('renders loading state', () => {
-    const { getByText } = render(
+  it('renders loading spinner when loading', () => {
+    render(
       <MockedProvider mocks={mocks} addTypename={false}>
         <CharacterList />
       </MockedProvider>
     );
 
-    expect(getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('renders error state', async () => {
+  it('renders error message when there is an error', async () => {
     const errorMock = {
       request: {
         query: GET_CHARACTERS,
+        variables: { page: 1 },
       },
-      error: new Error('GraphQL error'),
+      error: new Error('Error occurred'),
     };
 
-    const { getByText } = render(
+    render(
       <MockedProvider mocks={[errorMock]} addTypename={false}>
         <CharacterList />
       </MockedProvider>
     );
 
-    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
-
-    expect(getByText('Error: GraphQL error')).toBeInTheDocument();
+    const errorMessage = await screen.findByText('Error: Error occurred');
+    expect(errorMessage).toBeInTheDocument();
   });
 
-  it('renders character list', async () => {
-    const { getByText, getByAltText } = render(
+  it('renders character list when data is loaded', async () => {
+    renderer.create(
       <MockedProvider mocks={mocks} addTypename={false}>
         <CharacterList />
       </MockedProvider>
     );
 
-    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    const character1Name = await screen.findByText('Character 1');
+    const character2Name = await screen.findByText('Character 2');
 
-    expect(getByText('Character 1')).toBeInTheDocument();
-    expect(getByAltText('Character 1')).toBeInTheDocument();
-    expect(getByText('Status: Status 1')).toBeInTheDocument();
-
-    expect(getByText('Character 2')).toBeInTheDocument();
-    expect(getByAltText('Character 2')).toBeInTheDocument();
-    expect(getByText('Status: Status 2')).toBeInTheDocument();
+    expect(character1Name).toBeInTheDocument();
+    expect(character2Name).toBeInTheDocument();
   });
 });

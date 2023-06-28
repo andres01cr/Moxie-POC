@@ -1,4 +1,4 @@
-import React from 'react';
+import { FC }  from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { useParams } from 'react-router';
@@ -61,8 +61,8 @@ export const GET_CHARACTER_DETAILS = gql`
   }
 `;
 
-const CharacterDetails: React.FC<CharacterDetailsProps> = () => {
-  const { id } = useParams();
+const CharacterDetails: FC<CharacterDetailsProps>  = ({characterId}) => {
+  const { id } = useParams() || characterId;
   const { loading, error, data } = useQuery(GET_CHARACTER_DETAILS, {
     variables: { id },
   });

@@ -32,7 +32,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const GET_CHARACTERS = gql`
+export const GET_CHARACTERS = gql`
   query GetCharacters($page: Int!) {
     characters(page: $page) {
       info {
@@ -68,7 +68,7 @@ const CharacterList: React.FC = () => {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  });
 
   const loadMoreCharacters = () => {
     if (!loading && data?.characters.info.next) {

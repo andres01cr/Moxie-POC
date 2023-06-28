@@ -23,3 +23,7 @@ export interface Error {
 export interface EpisodeDetailsProps {
     episodeId?: string;
   }
+
+  export interface CharacterListProps {
+    characterId?: string;
+  }  
