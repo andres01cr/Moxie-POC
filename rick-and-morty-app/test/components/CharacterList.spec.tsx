@@ -1,7 +1,9 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/react-testing';
-import  { GET_CHARACTERS, CharacterList } from '../../src/components/CharacterList';
+import { MemoryRouter } from 'react-router-dom';
+import CharacterList, { GET_CHARACTERS }  from '../../src/components/CharacterList';
+import '@testing-library/jest-dom'
 
 const mocks = [
   {
@@ -17,15 +19,15 @@ const mocks = [
           },
           results: [
             {
-              id: '1',
+              id: 1,
               name: 'Character 1',
-              image: 'image-url-1',
+              image: 'image1.jpg',
               status: 'Alive',
             },
             {
-              id: '2',
+              id: 2,
               name: 'Character 2',
-              image: 'image-url-2',
+              image: 'image2.jpg',
               status: 'Dead',
             },
           ],
@@ -36,46 +38,49 @@ const mocks = [
 ];
 
 describe('CharacterList', () => {
-  it('renders loading spinner when loading', () => {
+  it('renders loading state initially', async() => {
     render(
-      <MockedProvider mocks={mocks} addTypename={false}>
+      <MockedProvider mocks={mocks}>
         <CharacterList />
       </MockedProvider>
     );
-
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    // screen.debug();
+  expect(await screen.getByRole('progressbar')).toBeVisible()
   });
 
-  it('renders error message when there is an error', async () => {
-    const errorMock = {
-      request: {
-        query: GET_CHARACTERS,
-        variables: { page: 1 },
+  it('renders character list after loading', async () => {
+    render(
+      <MockedProvider mocks={mocks} addTypename={false}>
+        <MemoryRouter>
+          <CharacterList />
+        </MemoryRouter>
+      </MockedProvider>
+    );
+
+    
+    expect(await screen.findByText('Character 1')).toBeVisible();
+    expect(await screen.findByText('Character 2')).toBeVisible();
+  });
+
+  it('renders error message on error', async () => {
+    const errorMocks = [
+      {
+        request: {
+          query: GET_CHARACTERS,
+          variables: { page: 1 },
+        },
+        error: new Error('GraphQL error'),
       },
-      error: new Error('Error occurred'),
-    };
+    ];
 
     render(
-      <MockedProvider mocks={[errorMock]} addTypename={false}>
-        <CharacterList />
+      <MockedProvider mocks={errorMocks} addTypename={false}>
+        <MemoryRouter>
+          <CharacterList />
+        </MemoryRouter>
       </MockedProvider>
     );
+    expect(await screen.findByText('Error: GraphQL error')).toBeVisible();
 
-    const errorMessage = await screen.findByText('Error: Error occurred');
-    expect(errorMessage).toBeInTheDocument();
-  });
-
-  it('renders character list when data is loaded', async () => {
-    renderer.create(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <CharacterList />
-      </MockedProvider>
-    );
-
-    const character1Name = await screen.findByText('Character 1');
-    const character2Name = await screen.findByText('Character 2');
-
-    expect(character1Name).toBeInTheDocument();
-    expect(character2Name).toBeInTheDocument();
   });
 });
