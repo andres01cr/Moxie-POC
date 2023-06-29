@@ -48,7 +48,7 @@ export const GET_EPISODE_DETAILS = gql`
 
 const EpisodeDetails: FC<EpisodeDetailsProps> = ({ episodeId }) => {
   const classes = useStyles();
-  const { id } = useParams() || episodeId;
+  const { id = episodeId } = useParams() || {};
   const { loading, error, data } = useQuery(GET_EPISODE_DETAILS, {
     variables: { id },
   });

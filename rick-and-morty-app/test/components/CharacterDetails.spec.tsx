@@ -1,120 +1,76 @@
 import React from 'react';
-import { render, waitFor, screen } from '@testing-library/react';
-import CharacterDetails, { GET_CHARACTER_DETAILS } from '../../src/components/CharacterDetails';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/react-testing';
-
-const characterId = '1';
-const characterMock = {
-  id: characterId,
-  name: 'Test Character',
-  image: 'test-image.jpg',
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import CharacterDetails, { GET_CHARACTER_DETAILS } from '../../src/components/CharacterDetails';
+import '@testing-library/jest-dom'
+// Mocked data for the GraphQL query
+const mockCharacterData = {
+  id: '1',
+  name: 'Character 1',
+  image: 'character1.jpg',
   episode: [
     {
-      id: 'episode1',
+      id: '1',
       name: 'Episode 1',
       characters: [
-        {
-          id: 'character1',
-          name: 'Character 1',
-          image: 'character1-image.jpg',
-        },
-        {
-          id: 'character2',
-          name: 'Character 2',
-          image: 'character2-image.jpg',
-        },
-      ],
-    },
-    {
-      id: 'episode2',
-      name: 'Episode 2',
-      characters: [
-        {
-          id: 'character3',
-          name: 'Character 3',
-          image: 'character3-image.jpg',
-        },
+        { id: '1', name: 'Character 1', image: 'character1.jpg' },
+        { id: '2', name: 'Character 2', image: 'character2.jpg' },
       ],
     },
   ],
 };
 
+// Mock the Apollo query response
 const mocks = [
   {
     request: {
       query: GET_CHARACTER_DETAILS,
-      variables: { id: characterId },
+      variables: { id: '1' },
     },
-    result: {
-      data: {
-        character: characterMock,
-      },
-    },
+    result: { data: { character: mockCharacterData } },
   },
 ];
 
-jest.mock('react-router', () => ({
-  useParams: jest.fn().mockReturnValue({ id: characterId }),
-}));
-
 describe('CharacterDetails', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should render loading state initially', () => {
+  it('renders loading state initially', async() => {
     render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <CharacterDetails />
+      <MockedProvider mocks={mocks}>
+        <CharacterDetails characterId="1" />
       </MockedProvider>
     );
 
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(await screen.findByText('Loading...')).toBeVisible();
   });
 
-  it('should render character details', async () => {
+  it('renders error state if query fails', async () => {
+    const errorMessage = 'Error occurred';
+
     render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <CharacterDetails />
+      <MockedProvider mocks={[{ ...mocks[0], error: new Error(errorMessage) }]}>
+        <CharacterDetails characterId="1" />
       </MockedProvider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByAltText('Test Character')).toBeInTheDocument();
-    //   expect(screen.getByText('Name: Test Character')).toBeInTheDocument();
-    //   expect(screen.getByText('Episodes:')).toBeInTheDocument();
-    //   expect(screen.getByText('Episode 1')).toBeInTheDocument();
-    //   expect(screen.getByText('Episode 2')).toBeInTheDocument();
-    //   expect(screen.getByText('Characters:')).toBeInTheDocument();
-    //   expect(screen.getByAltText('Character 1')).toBeInTheDocument();
-    //   expect(screen.getByText('Name: Character 1')).toBeInTheDocument();
-    //   expect(screen.getByAltText('Character 2')).toBeInTheDocument();
-    //   expect(screen.getByText('Name: Character 2')).toBeInTheDocument();
-    //   expect(screen.getByAltText('Character 3')).toBeInTheDocument();
-    //   expect(screen.getByText('Name: Character 3')).toBeInTheDocument();
-    });
+
+      expect(await screen.findByText(`Error: ${errorMessage}`)).toBeVisible()
   });
 
-  it('should render error state', async () => {
-    const errorMessage = 'GraphQL error';
-    const errorMocks = [
-      {
-        request: {
-          query: GET_CHARACTER_DETAILS,
-          variables: { id: characterId },
-        },
-        error: new Error(errorMessage),
-      },
-    ];
-
+  it('renders character details and episodes', async () => {
     render(
-      <MockedProvider mocks={errorMocks} addTypename={false}>
-        <CharacterDetails />
+      <MockedProvider mocks={mocks}>
+        <MemoryRouter initialEntries={['/character/1']}>
+        <Routes>
+          <Route path="/character/:id" element={<CharacterDetails />} />
+        </Routes>
+        </MemoryRouter>
       </MockedProvider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(`Error: ${errorMessage}`)).toBeInTheDocument();
-    });
+      expect(await screen.findByText('Name: Character 1')).toBeVisible();
+      expect(await screen.findByText('Episodes:')).toBeVisible();
+      expect(await screen.findByText('Episode 1 Episode # 1')).toBeVisible();
+      expect(await screen.findByText('Name: Character 1, id 1')).toBeVisible();
+      expect(await screen.findByText('Name: Character 2, id 2')).toBeVisible();
   });
 });

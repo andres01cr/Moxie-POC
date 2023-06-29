@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MockedProvider } from '@apollo/react-testing';
 import { MemoryRouter } from 'react-router-dom';
 import CharacterList, { GET_CHARACTERS }  from '../../src/components/CharacterList';
@@ -44,8 +44,8 @@ describe('CharacterList', () => {
         <CharacterList />
       </MockedProvider>
     );
-    // screen.debug();
-  expect(await screen.getByRole('progressbar')).toBeVisible()
+
+  expect(await screen.getByRole('progressbar')).toBeVisible();
   });
 
   it('renders character list after loading', async () => {
@@ -57,7 +57,6 @@ describe('CharacterList', () => {
       </MockedProvider>
     );
 
-    
     expect(await screen.findByText('Character 1')).toBeVisible();
     expect(await screen.findByText('Character 2')).toBeVisible();
   });

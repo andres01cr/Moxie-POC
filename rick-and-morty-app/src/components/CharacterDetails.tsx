@@ -48,6 +48,7 @@ export const GET_CHARACTER_DETAILS = gql`
     character(id: $id) {
       name
       image
+      id
       episode {
         id
         name
@@ -62,7 +63,7 @@ export const GET_CHARACTER_DETAILS = gql`
 `;
 
 const CharacterDetails: FC<CharacterDetailsProps>  = ({characterId}) => {
-  const { id } = useParams() || characterId;
+  const { id = characterId } = useParams() || {};
   const { loading, error, data } = useQuery(GET_CHARACTER_DETAILS, {
     variables: { id },
   });
@@ -91,11 +92,11 @@ const CharacterDetails: FC<CharacterDetailsProps>  = ({characterId}) => {
   const character = data.character;
 
   return (
-    <div>
+    <>
       <CharacterImage src={character.image} alt={character.name} />
       <Typography variant="body1">Name: {character.name}</Typography>
       <Typography variant="body1">Episodes:</Typography>
-      <List>
+      <List key={character.id}>
         {character.episode.map((episode: Episode) => (
           <>
             <ListItem key={episode.id} component={Link} to={`/episode/${episode.id}`}>
@@ -103,8 +104,8 @@ const CharacterDetails: FC<CharacterDetailsProps>  = ({characterId}) => {
                 {`${episode.name} Episode # ${episode.id}`}
               </EpisodeName>
               <CharacterList>
-                {episode.characters.map((character: Character) => (
-                  <ListItem key={character.id}>
+                {episode.characters.map((character: Character, index: number) => (
+                  <ListItem key={`${character.id}-${index}`}>
                     <CharacterAvatar src={character.image} alt={character.name} />
                     <ListItemText primary={`Name: ${character.name}, id  ${character.id}`} />
                   </ListItem>
@@ -117,7 +118,7 @@ const CharacterDetails: FC<CharacterDetailsProps>  = ({characterId}) => {
         ))}
       </List>
 
-    </div>
+    </>
   );
 };
 
